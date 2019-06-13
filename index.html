@@ -3,11 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <title>Title of the document</title>
-  <script src="test/abc.js"></script>
+  <!--<script src="test/abc.js"></script>-->
+  <script src="dist/commonjs/bundle.js"></script>
 </head>
 
 <body>
+<script>
+  var a = new proto.SearchRequest()
+  a.setPageNumber(1);
+  a.setQuery('hello');
+  a.setResultPerPage(3);
+  console.log(a.array);
 
+
+  var c = new proto.foo.bar.AddressBook();
+  c.addPeople(new proto.foo.bar.Person(["A", 1, "AA"]));
+  c.addPeople(new proto.foo.bar.Person(["B", 1, "BB"]));
+  console.log(c.array);
+</script>
 </body>
 
 </html>

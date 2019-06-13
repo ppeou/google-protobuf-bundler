@@ -8,45 +8,54 @@ const revDel = require('gulp-rev-delete-original');
 const htmlMinify = require('gulp-htmlmin');
 const del = require('del');
 const shell = require('gulp-shell');
-const {spawn} = require('child_process');
+const {spawn, exec} = require('child_process');
 
 function cleanup() {
   return del(['dist/**']);
 }
 
 function setup() {
-  return src(protoFiles, {cwd: 'proto/', read: false})
+  return src('gulpfile.js', {read: false})
     .pipe(dest('dist/java'))
     .pipe(dest('dist/commonjs'));
 }
 
 const cmd = {
   protoc: 'compiler/protoc.exe',
-  browserify: 'node_modules/.bin/browserify.cmd',
+  browserify: 'browserify',
 };
 
-const protoFiles = ['person.proto'];
+const _files = ['person', 'search'];
 
-function exec(command) {
-  const args = command.split(' ');
-  const cmd = args.shift();
-  return spawn(cmd, args.filter(c => !!c));
+function getProtoFiles() {
+  return _files.map(c => `proto/${c}.proto`);
 }
 
-//compiler\protoc.exe --java_out=dest\java proto\person.proto
+function getPBFiles() {
+  return _files.map(c => `dist/commonjs/proto/${c}_pb.js`);
+}
+
+const protoFilesArr = getProtoFiles();
+const protoFilesFlat = protoFilesArr.join(' ');
+const pbFilesArr = getPBFiles();
+const pbFilesFlat = pbFilesArr.join(' ');
+
+function getSpawn(command) {
+  const args = command.split(' ');
+  const cmd = args.shift();
+  return spawn(cmd, args.filter(c => !!c), {cwd: '.'});
+}
+
 function java(cb) {
-  exec(`${cmd.protoc} --java_out=dist/java proto/person.proto`).on('close', cb);
+  getSpawn(`${cmd.protoc} --java_out=dist/java ${protoFilesFlat}`).on('close', cb);
 }
 
 function commonjs(cb) {
-  exec(`${cmd.protoc} --js_out=binary,import_style=commonjs:dist/commonjs  proto/person.proto`).on('close', cb);
+  getSpawn(`${cmd.protoc} --js_out=binary,import_style=commonjs:dist/commonjs  ${protoFilesFlat}`).on('close', cb);
 }
 
 function browserify(cb) {
-  exec(`${cmd.browserify} node_modules/google-protobuf/google-protobuf.js commonjs:dist/commonjs/proto/person_pb.js > dist/commonjs/bundle.js`).on('close', cb);
+  exec(`${cmd.browserify} node_modules/google-protobuf/google-protobuf.js ${pbFilesFlat} > dist/commonjs/bundle.js`).on('close', cb);
 }
-
-//node_modules/google-protobuf/google-protobuf.js
-//browserify google-protobuf.js person_pb.js > abc.js
 
 exports.default = series(cleanup, setup, parallel(java, commonjs), browserify);
