@@ -48,17 +48,18 @@ function getSpawn(command) {
 }
 
 function java(cb) {
-  getSpawn(`${cmd.protoc} --java_out=dist/java ${protoFilesFlat}`).on('close', cb);
+  getSpawn(`${cmd.protoc} --java_out=dist/java ${protoFilesFlat}`)
+    .on('close', cb);
 }
 
 function commonjs(cb) {
-  getSpawn(`${cmd.protoc} --js_out=binary,import_style=commonjs:dist/commonjs  ${protoFilesFlat}`).on('close', cb);
+  getSpawn(`${cmd.protoc} --js_out=binary,import_style=commonjs:dist/commonjs  ${protoFilesFlat}`)
+    .on('close', cb);
 }
 
 function browserify(cb) {
-  const cmdA = `${cmd.browserify} node_modules/google-protobuf/google-protobuf.js ${pbFilesFlat} > dist/js/bundle.js`;
-  console.log(cmdA);
-  exec(cmdA).on('close', cb);
+  exec(`${cmd.browserify} node_modules/google-protobuf/google-protobuf.js ${pbFilesFlat} > dist/js/bundle.js`)
+    .on('close', cb);
 }
 
 function move(cb) {
