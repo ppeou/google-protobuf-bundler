@@ -19,7 +19,6 @@
     "gulp-csso": "^3.0.1",
     "gulp-exec": "^3.0.2",
     "gulp-htmlmin": "^5.0.1",
-    "gulp-rename": "^1.4.0",
     "gulp-replace": "^1.0.0",
     "gulp-rev": "^9.0.0",
     "gulp-rev-delete-original": "^0.2.3",

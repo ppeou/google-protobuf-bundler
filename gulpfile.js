@@ -7,7 +7,7 @@ const revRewrite = require('gulp-rev-rewrite');
 const revDel = require('gulp-rev-delete-original');
 const htmlMinify = require('gulp-htmlmin');
 const del = require('del');
-const shell = require('gulp-shell');
+const rename = require("gulp-rename");
 const {spawn, exec} = require('child_process');
 
 function cleanup() {
@@ -17,7 +17,8 @@ function cleanup() {
 function setup() {
   return src('gulpfile.js', {read: false})
     .pipe(dest('dist/java'))
-    .pipe(dest('dist/commonjs'));
+    .pipe(dest('dist/commonjs'))
+    .pipe(dest('dist/js'));
 }
 
 const cmd = {
@@ -32,7 +33,7 @@ function getProtoFiles() {
 }
 
 function getPBFiles() {
-  return _files.map(c => `dist/commonjs/proto/${c}_pb.js`);
+  return _files.map(c => `dist/proto/${c}_pb.js`);
 }
 
 const protoFilesArr = getProtoFiles();
@@ -55,7 +56,15 @@ function commonjs(cb) {
 }
 
 function browserify(cb) {
-  exec(`${cmd.browserify} node_modules/google-protobuf/google-protobuf.js ${pbFilesFlat} > dist/commonjs/bundle.js`).on('close', cb);
+  const cmdA = `${cmd.browserify} node_modules/google-protobuf/google-protobuf.js ${pbFilesFlat} > dist/js/bundle.js`;
+  console.log(cmdA);
+  exec(cmdA).on('close', cb);
 }
 
-exports.default = series(cleanup, setup, parallel(java, commonjs), browserify);
+function move(cb) {
+  exec('mv dist/commonjs/proto dist').on('close', () => {
+    exec('rm -rf dist/commonjs').on('close', cb);
+  });
+}
+
+exports.default = series(cleanup, setup, parallel(java, commonjs), move, browserify);
