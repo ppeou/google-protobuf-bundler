@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Title of the document</title>
+</head>
+
+<body>
+<script type="module">
+
+  //import {SearchRequest, AddressBook, Person} from './dist/js/all';
+ /* import search from "./dist/js/search-esm";
+   import person from "./dist/js/person-esm";
+*/
+   import {search, person} from './dist/js/all-esm';
+
+   window.proto = {search, person};
+
+  const {AddressBook, Person} = person;
+  const {SearchRequest} = search;
+
+  var a = new SearchRequest();
+  a.setPageNumber(1);
+  a.setQuery('hello');
+  a.setResultPerPage(3);
+  console.log(a.array);
+
+  var c = new AddressBook();
+  c.addPeople(new Person(["A", 1, "AA"]));
+  c.addPeople(new Person(["B", 1, "BB"]));
+  console.log(c.array);
+
+</script>
+</body>
+
+</html>
