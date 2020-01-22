@@ -1,3 +1,7 @@
+in terminal run ```gulp```
+
+then run ```rollup -c```
+
 https://github.com/protocolbuffers/protobuf/blob/master/js/gulpfile.js
 
 https://developers.google.com/protocol-buffers/docs/reference/javascript-generated
