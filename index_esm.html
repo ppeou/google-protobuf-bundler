@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Title of the document</title>
+  <title>ES6 Module Import</title>
 </head>
 
 <body>
@@ -12,14 +12,25 @@
  /* import search from "./dist/js/search-esm";
    import person from "./dist/js/person-esm";
 */
-   import {search, person} from './dist/js/all-esm';
 
-   window.proto = {search, person};
+  /*import * as proto from './dist/js/all-esm';
+
+  window.abc = proto;*/
+
+   /*import * as proto from './dist/js/all-esm';
+
+   window.abc = proto;
+   const {search, person} = proto;
 
   const {AddressBook, Person} = person;
-  const {SearchRequest} = search;
+  const {SearchRequest} = search;*/
 
-  var a = new SearchRequest();
+  import {AddressBook, Person, SearchRequest} from './dist/js/all-esm';
+  /*import AA from './dist/js/all-esm';
+  window.AA = AA;
+  console.log(AA);*/
+
+  /*var a = new SearchRequest();
   a.setPageNumber(1);
   a.setQuery('hello');
   a.setResultPerPage(3);
@@ -28,7 +39,7 @@
   var c = new AddressBook();
   c.addPeople(new Person(["A", 1, "AA"]));
   c.addPeople(new Person(["B", 1, "BB"]));
-  console.log(c.array);
+  console.log(c.array);*/
 
 </script>
 </body>

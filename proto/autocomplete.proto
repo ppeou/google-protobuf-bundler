@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package me.world.usa.service;
+
+message AutoCompleteResponse {
+    message Item {
+        string url = 1;
+        string title = 2;
+        repeated string snippets = 3;
+    }
+    repeated Item results = 1;
+}

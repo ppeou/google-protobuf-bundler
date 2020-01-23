@@ -1,41 +1,42 @@
 const {src, dest, series, parallel} = require('gulp');
 const del = require('del');
 const browserify = require('browserify');
-const source =  require('vinyl-source-stream');
+const source = require('vinyl-source-stream');
 const {spawn, exec} = require('child_process');
 const rename = require('gulp-rename');
 const replace = require('gulp-replace');
 var fs = require('fs');
 
-function cleanup() {
-  return del(['dist/**']);
+const entryFolder = './proto';
+
+const getFilesFromFolder = (folder) => {
+  return fs.readdirSync(folder).filter(f => f.indexOf('.proto') > -1).map(name => {
+    return name.replace('.proto', '');
+  });
+};
+
+const filesInfo = {
+  files: '',
+  protoFilesArr: '',
+  protoFilesFlat: '',
+  pbFilesArr: '',
+  pbFilesFlat: '',
+};
+
+function getPathToProtoFiles(files) {
+  return files.map(c => `proto/${c}.proto`);
+  //return files.map(c => `${c}.proto`);
 }
 
-function setup() {
-  return src('gulpfile.js', {read: false})
-    .pipe(dest('dist/java'))
-    .pipe(dest('dist/js'));
+function getPathToPBFiles(files) {
+  return ['google-protobuf', ...files].map(c => `dist/proto/${c}_pb.js`);
 }
 
 const cmd = {
   protoc: 'compiler/protoc.exe',
+  //protoc: './protoc.exe',
   browserify: 'browserify',
 };
-
-const _files = ['person', 'search'];
-
-function getProtoFiles() {
-  return _files.map(c => `proto/${c}.proto`);
-}
-
-function getPBFiles() {
-  return _files.map(c => `dist/proto/${c}_pb.js`);
-}
-
-const protoFilesArr = getProtoFiles();
-const protoFilesFlat = protoFilesArr.join(' ');
-const pbFilesArr = getPBFiles();
-const pbFilesFlat = pbFilesArr.join(' ');
 
 function getSpawn(command) {
   const args = command.split(' ');
@@ -43,23 +44,46 @@ function getSpawn(command) {
   return spawn(cmd, args.filter(c => !!c), {cwd: '.'});
 }
 
-function java(cb) {
-  const _cmd = `${cmd.protoc} --java_out=dist/java ${protoFilesFlat}`;
+function preCleanup() {
+  return del(['dist/**']);
+}
+
+function setupProtoCompiler() {
+  return src('compiler/protoc.exe')
+    .pipe(dest('proto'));
+}
+
+function setupDistributeFolder() {
+  return src('gulpfile.js', {read: false})
+    .pipe(dest('dist/java'))
+    .pipe(dest('dist/proto'))
+    .pipe(dest('dist/js'));
+}
+
+function getProtoFileName(cb) {
+  const files = getFilesFromFolder(entryFolder);
+  protoFilesArr = getPathToProtoFiles(files);
+  protoFilesFlat = protoFilesArr.join(' ');
+  pbFilesArr = getPathToPBFiles(files);
+  pbFilesFlat = pbFilesArr.join(' ');
+  Object.assign(filesInfo, {files, protoFilesArr, protoFilesFlat, pbFilesArr, pbFilesFlat});
+  cb();
+}
+
+function protoToJavaClass(cb) {
+  const _cmd = `${cmd.protoc} --proto_path=proto --java_out=dist/java ${protoFilesFlat}`;
   console.log(_cmd);
   getSpawn(_cmd).on('close', cb);
 }
 
-function commonjs(cb) {
-  const _cmd = `${cmd.protoc} --js_out=binary,import_style=commonjs:dist/  ${protoFilesFlat}`;
+function protoToCommonJs(cb) {
+  const _cmd = `${cmd.protoc} --proto_path=proto --js_out=binary,import_style=commonjs:dist/proto  ${protoFilesFlat}`;
   console.log(_cmd);
   getSpawn(_cmd).on('close', cb);
 }
 
-function bundleFiles() {
-  //'node_modules/google-protobuf/google-protobuf.js'
-  return  browserify(['dist/proto/google-protobuf_pb.js', ...pbFilesArr], {
-    bundleExternal: false
-  })
+function bundleCommonJsFiles() {
+  return browserify(['dist/proto/google-protobuf_pb.js', ...pbFilesArr], {bundleExternal: true})
     .bundle()
     .pipe(source('bundle.js'))
     .pipe(dest('dist/js'));
@@ -72,24 +96,42 @@ function importGoogleProtobuf() {
 }
 
 function updateGoogleRef() {
-  return src(['dist/proto/*.js', '!google-protobuf_pb.js'])
-    .pipe(replace(`var jspb = require('google-protobuf');`, `var jspb = require('./google-protobuf_pb.js');`))
+  return src(['dist/proto/*.js', '!dist/proto/google-protobuf_pb.js'])
+    .pipe(
+      replace(
+        `var jspb = require('google-protobuf');`,
+        `var jspb = require('./google-protobuf_pb.js');`))
     .pipe(dest('dist/proto'));
 }
 
-function createAllFile(cb) {
+function createEntryFile(cb) {
   const exportableNames = [];
-  const files = ['google-protobuf', ..._files].map(f => {
+  const files = filesInfo.files.map(f => {
     const newName = f.replace(/\-/g, '_');
-    exportableNames.push(newName);
+    exportableNames.push(`...${newName}`);
     return `const ${newName} = require('./${f}_pb.js');`;
   });
 
-  files.push(`\nmodule.exports = { ${exportableNames.join(', ')} };`);
+  files.push(`\nconst items = { ${exportableNames.join(', ')} };`);
+  files.push(`\nmodule.exports = items;`);
 
   fs.writeFile('dist/proto/all_pb.js', files.join('\n'), cb);
-
 }
 
-exports.default = series(cleanup, setup, parallel(java, commonjs),
-  importGoogleProtobuf, updateGoogleRef, createAllFile, bundleFiles);
+function doRollup(cb) {
+  const _cmd = `rollup -c`;
+  console.log(_cmd);
+  exec(_cmd).on('close', cb);
+}
+
+exports.default = series(
+  preCleanup,
+  setupDistributeFolder,
+  getProtoFileName,
+  setupProtoCompiler,
+  parallel(protoToJavaClass, protoToCommonJs),
+  importGoogleProtobuf,
+  updateGoogleRef,
+  createEntryFile,
+  parallel(bundleCommonJsFiles, doRollup)
+);

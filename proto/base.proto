@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package me.world.base;
+
+message Date {
+    int32 day = 1;
+    int32 month = 2;
+    int32 year = 3;
+}
+
+message Time {
+    int32 hour = 1;
+    int32 minute = 2;
+    int32 second = 3;
+}
+
+message DateTime {
+    int32 day = 1;
+    int32 month = 2;
+    int32 year = 3;
+    int32 hour = 4;
+    int32 minute = 5;
+    int32 second = 6;
+}
