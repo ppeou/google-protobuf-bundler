@@ -112,8 +112,8 @@ function createEntryFile(cb) {
     return `const ${newName} = require('./${f}_pb.js');`;
   });
 
-  files.push(`\nconst items = { ${exportableNames.join(', ')} };`);
-  files.push(`\nmodule.exports = items;`);
+  files.push(`const items = { ${exportableNames.join(', ')} };`);
+  files.push(`module.exports = items;`);
 
   fs.writeFile('dist/proto/all_pb.js', files.join('\n'), cb);
 }

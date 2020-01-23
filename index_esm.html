@@ -25,12 +25,12 @@
   const {AddressBook, Person} = person;
   const {SearchRequest} = search;*/
 
-  import {AddressBook, Person, SearchRequest} from './dist/js/all-esm';
-  /*import AA from './dist/js/all-esm';
-  window.AA = AA;
-  console.log(AA);*/
+  //import {AddressBook, Person, SearchRequest} from './dist/js/all-esm';
+  import proto from './dist/js/all-esm';
+  const {AddressBook, Person, SearchRequest} = proto;
+  window.AA = proto;
 
-  /*var a = new SearchRequest();
+  var a = new SearchRequest();
   a.setPageNumber(1);
   a.setQuery('hello');
   a.setResultPerPage(3);
@@ -39,7 +39,7 @@
   var c = new AddressBook();
   c.addPeople(new Person(["A", 1, "AA"]));
   c.addPeople(new Person(["B", 1, "BB"]));
-  console.log(c.array);*/
+  console.log(c.array);
 
 </script>
 </body>
